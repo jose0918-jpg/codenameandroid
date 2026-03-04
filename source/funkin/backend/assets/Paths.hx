@@ -325,6 +325,23 @@ class Paths
 		return content;
 	}
 
+	#if android
+    static function getAndroidDataPath():String {
+    try {
+        var context = openfl.utils.AndroidHelper.getActivity();
+        if (context != null) {
+            var filesDir = context.getExternalFilesDir(null);
+            if (filesDir != null) {
+                return filesDir.getAbsolutePath() + "/assets/";
+            }
+        }
+    } catch(e:Dynamic) {
+        trace("Warning: Could not get Android data path, falling back to assets/");
+    }
+    return "assets/";
+}
+#end
+
 	// Used in Script.hx
 	@:noCompletion public static function getFilenameFromLibFile(path:String) {
 		var file = new haxe.io.Path(path);
@@ -342,23 +359,6 @@ class Paths
 		return "";
 	}
 }
-
-#if android
-static function getAndroidDataPath():String {
-    try {
-        var context = openfl.utils.AndroidHelper.getActivity();
-        if (context != null) {
-            var filesDir = context.getExternalFilesDir(null);
-            if (filesDir != null) {
-                return filesDir.getAbsolutePath() + "/assets/";
-            }
-        }
-    } catch(e:Dynamic) {
-        trace("Warning: Could not get Android data path, falling back to assets/");
-    }
-    return "assets/";
-}
-#end
 	
 class ScriptPathInfo {
 	public var file:String;
