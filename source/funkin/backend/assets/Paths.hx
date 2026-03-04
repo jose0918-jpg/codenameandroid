@@ -343,16 +343,6 @@ class Paths
 	}
 }
 
-class ScriptPathInfo {
-	public var file:String;
-	public var library:AssetLibrary;
-
-	public function new(file:String, library:AssetLibrary) {
-		this.file = file;
-		this.library = library;
-	}
-}
-
 #if android
 static function getAndroidDataPath():String {
     try {
@@ -369,3 +359,13 @@ static function getAndroidDataPath():String {
     return "assets/";
 }
 #end
+	
+class ScriptPathInfo {
+	public var file:String;
+	public var library:AssetLibrary;
+
+	public function new(file:String, library:AssetLibrary) {
+		this.file = file;
+		this.library = library;
+	}
+}
