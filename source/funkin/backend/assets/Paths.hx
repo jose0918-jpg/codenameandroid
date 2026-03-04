@@ -10,6 +10,11 @@ import lime.utils.AssetLibrary;
 import openfl.utils.Assets as OpenFlAssets;
 import animate.FlxAnimateFrames;
 
+#if android
+import lime.system.JNI;
+import openfl.system.System;
+#end
+
 using StringTools;
 
 class Paths
@@ -25,27 +30,40 @@ class Paths
 	}
 
 	public static inline function getPath(file:String, ?library:String) {
-		var returnedPath:String = library != null ? '$library:assets/$library/$file' : 'assets/$file';
-		#if (sys && !windows)
-		returnedPath = Path.normalize(returnedPath);
-		if (OpenFlAssets.exists(returnedPath)) return returnedPath;
-		var fixedPath:String = library != null ? '$library:assets/$library/' : 'assets/';
-		var parts:Array<String> = returnedPath.split("/");
-		for (it=>part in parts) {
-			if (it == 0) continue;
-			var entries:Array<String> = null;
-			if (Path.extension(part) == "") entries = assetsTree.getFolders(fixedPath);
-			else entries = assetsTree.getFiles(fixedPath);
-			for (entry in entries) {
-				if (entry.toLowerCase() == part.toLowerCase()) {
-					fixedPath += entry + (it != parts.length - 1 ? "/" : "");
-					break;
-				}
-			}
-		}
-		if (returnedPath.toLowerCase() == fixedPath.toLowerCase()) returnedPath = fixedPath;
-		#end
-		return returnedPath;
+    var returnedPath:String;
+    
+    #if android
+	var basePath = getAndroidDataPath();
+    returnedPath = library != null ? '$library:$basePath$library/$file' : '$basePath$file';
+    #else
+    returnedPath = library != null ? '$library:assets/$library/$file' : 'assets/$file';
+    #end
+    
+    #if (sys && !windows)
+    returnedPath = Path.normalize(returnedPath);
+    if (OpenFlAssets.exists(returnedPath)) return returnedPath;
+    var fixedPath:String;
+    #if android
+    fixedPath = library != null ? '$library:${getAndroidDataPath()}$library/' : '${getAndroidDataPath()}';
+    #else
+    fixedPath = library != null ? '$library:assets/$library/' : 'assets/';
+    #end
+    var parts:Array<String> = returnedPath.split("/");
+    for (it=>part in parts) {
+        if (it == 0) continue;
+        var entries:Array<String> = null;
+        if (Path.extension(part) == "") entries = assetsTree.getFolders(fixedPath);
+        else entries = assetsTree.getFiles(fixedPath);
+        for (entry in entries) {
+            if (entry.toLowerCase() == part.toLowerCase()) {
+                fixedPath += entry + (it != parts.length - 1 ? "/" : "");
+                break;
+            }
+        }
+    }
+    if (returnedPath.toLowerCase() == fixedPath.toLowerCase()) returnedPath = fixedPath;
+    #end
+    return returnedPath;
 	}
 
 	public static inline function video(key:String, ?ext:String)
@@ -193,9 +211,13 @@ class Paths
 	inline static public function getAsepriteAtlasAlt(key:String, ?ext:String)
 		return FlxAtlasFrames.fromAseprite('$key.${ext != null ? ext : Flags.IMAGE_EXT}', '$key.json');
 
-	inline static public function getAssetsRoot():String
-		return  ModsFolder.currentModFolder != null ? '${ModsFolder.modsPath}${ModsFolder.currentModFolder}' : #if (sys && TEST_BUILD) './${Main.pathBack}assets/' #else './assets' #end;
-
+	inline static public function getAssetsRoot():String {
+    #if android
+    return ModsFolder.currentModFolder != null ? '${ModsFolder.modsPath}${ModsFolder.currentModFolder}' : '${getAndroidDataPath()}assets/';
+    #else
+    return ModsFolder.currentModFolder != null ? '${ModsFolder.modsPath}${ModsFolder.currentModFolder}' : #if (sys && TEST_BUILD) './${Main.pathBack}assets/' #else './assets' #end;
+    #end
+	}
 	/**
 	 * Gets frames at specified path.
 	 * @param key Path to the frames
@@ -330,3 +352,20 @@ class ScriptPathInfo {
 		this.library = library;
 	}
 }
+
+#if android
+static function getAndroidDataPath():String {
+    try {
+        var context = openfl.utils.AndroidHelper.getActivity();
+        if (context != null) {
+            var filesDir = context.getExternalFilesDir(null);
+            if (filesDir != null) {
+                return filesDir.getAbsolutePath() + "/assets/";
+            }
+        }
+    } catch(e:Dynamic) {
+        trace("Warning: Could not get Android data path, falling back to assets/");
+    }
+    return "assets/";
+}
+#end
