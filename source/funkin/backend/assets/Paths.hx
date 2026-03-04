@@ -218,6 +218,23 @@ class Paths
     return ModsFolder.currentModFolder != null ? '${ModsFolder.modsPath}${ModsFolder.currentModFolder}' : #if (sys && TEST_BUILD) './${Main.pathBack}assets/' #else './assets' #end;
     #end
 	}
+
+	#if android
+    static function getAndroidDataPath():String {
+    try {
+        var context = openfl.utils.AndroidHelper.getActivity();
+        if (context != null) {
+            var filesDir = context.getExternalFilesDir(null);
+            if (filesDir != null) {
+                return filesDir.getAbsolutePath() + "/assets/";
+            }
+        }
+    } catch(e:Dynamic) {
+        trace("Warning: Could not get Android data path, falling back to assets/");
+    }
+    return "assets/";
+}
+#end
 	/**
 	 * Gets frames at specified path.
 	 * @param key Path to the frames
@@ -324,23 +341,6 @@ class Paths
 		}
 		return content;
 	}
-
-	#if android
-    static function getAndroidDataPath():String {
-    try {
-        var context = openfl.utils.AndroidHelper.getActivity();
-        if (context != null) {
-            var filesDir = context.getExternalFilesDir(null);
-            if (filesDir != null) {
-                return filesDir.getAbsolutePath() + "/assets/";
-            }
-        }
-    } catch(e:Dynamic) {
-        trace("Warning: Could not get Android data path, falling back to assets/");
-    }
-    return "assets/";
-}
-#end
 
 	// Used in Script.hx
 	@:noCompletion public static function getFilenameFromLibFile(path:String) {
