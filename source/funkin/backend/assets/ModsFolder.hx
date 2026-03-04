@@ -13,6 +13,15 @@ using StringTools;
 import sys.FileSystem;
 #end
 
+#if android
+import sys.FileSystem;
+
+class Paths {
+    public static function getAndroidAssetPath(path:String):String {
+        return "/Android/data/" + path;
+    }
+}
+#end
 
 class ModsFolder {
 	/**
